@@ -72,6 +72,16 @@
 \end{figure}
 
 \subsection{前向与逆向映射对比}
+对平移、旋转、欧氏、相似和仿射变换分别进行前向映射与逆向映射。前向映射仅做整数落点，容易出现黑色空洞；逆向映射结合插值后图像连贯性更好。各变换矩阵的运行结果如图\ref{fig:translation}--\ref{fig:affine} 所示，均展示了前向映射、逆向近邻和逆向双线性三种输出。
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.32\textwidth]{output/forward_translation.png}
+    \includegraphics[width=0.32\textwidth]{output/inverse_nearest_translation.png}
+    \includegraphics[width=0.32\textwidth]{output/inverse_bilinear_translation.png}
+    \caption{平移变换：前向映射（左）、逆向近邻（中）、逆向双线性（右）}
+    \label{fig:translation}
+\end{figure}
 对平移、旋转、欧氏、相似和仿射变换分别进行前向映射与逆向映射。前向映射仅做整数落点，容易出现黑色空洞；逆向映射结合插值后图像连贯性更好。以旋转与仿射为例如图\ref{fig:forward_inverse}、图\ref{fig:affine}。
 
 \begin{figure}[H]
@@ -81,6 +91,24 @@
     \includegraphics[width=0.32\textwidth]{output/inverse_bilinear_rotation.png}
     \caption{旋转变换：前向映射（左）、逆向近邻（中）、逆向双线性（右）}
     \label{fig:forward_inverse}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.32\textwidth]{output/forward_euclidean.png}
+    \includegraphics[width=0.32\textwidth]{output/inverse_nearest_euclidean.png}
+    \includegraphics[width=0.32\textwidth]{output/inverse_bilinear_euclidean.png}
+    \caption{欧氏变换（旋转+平移）：前向映射与逆向映射对比}
+    \label{fig:euclidean}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.32\textwidth]{output/forward_similarity.png}
+    \includegraphics[width=0.32\textwidth]{output/inverse_nearest_similarity.png}
+    \includegraphics[width=0.32\textwidth]{output/inverse_bilinear_similarity.png}
+    \caption{相似变换：前向映射与逆向映射对比}
+    \label{fig:similarity}
 \end{figure}
 
 \begin{figure}[H]
