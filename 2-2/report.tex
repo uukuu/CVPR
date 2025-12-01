@@ -1,0 +1,179 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage{ctex}
+\usepackage{amsmath, amssymb}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\setlist[itemize]{leftmargin=16pt}
+\setlist[enumerate]{leftmargin=16pt}
+
+\title{计算机视觉实验 2-2：边缘与角点检测}
+\author{实验者：xxx}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\section{实验内容}
+\begin{enumerate}
+  \item 基于高斯一阶微分计算图像梯度（幅值与方向），分析高斯方差对梯度的影响；
+  \item 实现 Canny 边缘检测器，展示各阶段的中间结果，分析参数影响；
+  \item 实现 Harris 角点检测器，分析窗口参数影响并讨论不变性与等变性。
+\end{enumerate}
+
+\section{实验环境与数据}
+\begin{itemize}
+  \item 语言：Python 3，无额外第三方图像库；
+  \item 代码位置：仓库 \texttt{2-2} 目录；
+  \item 运行方式：\texttt{python 1.py}、\texttt{python 2.py}、\texttt{python 3.py}；
+  \item 结果保存：\texttt{outputs/} 目录中仅保留占位文件，PNG 需运行脚本重新生成后再编译查看。
+  \item 编译提示：若仓库中未包含生成的 PNG，请先按上述命令运行脚本以重新得到 \texttt{outputs/} 下的图片，再执行 \texttt{pdflatex report.tex}。
+\end{itemize}
+
+\section{相关理论}
+\subsection{高斯一阶微分梯度}
+二维高斯核 $G_{\sigma}(x,y)$ 与其一阶微分 $\partial G/\partial x,\partial G/\partial y$ 分别用于平滑与求导：
+\[
+\nabla f_G = \left[\dfrac{\partial G}{\partial x} * f,\; \dfrac{\partial G}{\partial y} * f\right],\quad
+\|\nabla f_G\| = \sqrt{I_x^2 + I_y^2},\quad
+\theta = \arctan\frac{I_y}{I_x}.
+\]
+大方差提升平滑程度，抑制高频噪声但也会弱化细节。
+
+\subsection{Canny 边缘检测}
+流程：\textcircled{1} 高斯滤波降噪；\textcircled{2} 一阶差分求梯度幅值与方向；\textcircled{3} 沿梯度方向做非极大值抑制；\textcircled{4} 双阈值滞后连接强弱边缘。好的边缘检测器应具备检测率高、定位精度高、响应单一等特性。
+
+\subsection{Harris 角点检测}
+利用二阶矩阵 $M$ 的行列式与迹构建响应：
+\[
+R = \det(M) - \alpha \cdot (\operatorname{trace} M)^2,
+\]
+$R$ 同时反映窗口在水平方向与垂直方向的强梯度。角点需满足 $R>T$ 且为局部极大值。窗口（或平滑）尺度控制了响应的空间支持，从而影响角点数量与定位精度。
+
+\section{实验步骤与结果概述}
+\subsection{任务一：高斯一阶微分梯度}
+\begin{itemize}
+  \item 选择 $\sigma\in\{0.5,1.0,2.0\}$，计算 $G_x, G_y$ 卷积后的 $I_x,I_y$，再求幅值与方向；
+  \item 幅值图随 $\sigma$ 增大而更平滑，细节与噪声被抑制；方向图用色相编码，平滑后方向更连续。
+\end{itemize}
+生成结果如图~\ref{fig:task1-input}~--~\ref{fig:task1-sigma2} 所示。
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.35\textwidth]{outputs/task1/input.png}
+  \caption{任务一输入图像}
+  \label{fig:task1-input}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.23\textwidth]{outputs/task1/gx_sigma0.50.png}
+  \includegraphics[width=0.23\textwidth]{outputs/task1/gy_sigma0.50.png}
+  \includegraphics[width=0.23\textwidth]{outputs/task1/mag_sigma0.50.png}
+  \includegraphics[width=0.23\textwidth]{outputs/task1/orient_sigma0.50.png}
+  \caption{$\sigma=0.5$ 的梯度结果（$G_x,G_y$、幅值、方向）}
+  \label{fig:task1-sigma05}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.23\textwidth]{outputs/task1/gx_sigma1.00.png}
+  \includegraphics[width=0.23\textwidth]{outputs/task1/gy_sigma1.00.png}
+  \includegraphics[width=0.23\textwidth]{outputs/task1/mag_sigma1.00.png}
+  \includegraphics[width=0.23\textwidth]{outputs/task1/orient_sigma1.00.png}
+  \caption{$\sigma=1.0$ 的梯度结果（$G_x,G_y$、幅值、方向）}
+  \label{fig:task1-sigma1}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.23\textwidth]{outputs/task1/gx_sigma2.00.png}
+  \includegraphics[width=0.23\textwidth]{outputs/task1/gy_sigma2.00.png}
+  \includegraphics[width=0.23\textwidth]{outputs/task1/mag_sigma2.00.png}
+  \includegraphics[width=0.23\textwidth]{outputs/task1/orient_sigma2.00.png}
+  \caption{$\sigma=2.0$ 的梯度结果（$G_x,G_y$、幅值、方向）}
+  \label{fig:task1-sigma2}
+\end{figure}
+
+\subsection{任务二：Canny 边缘检测}
+\begin{itemize}
+  \item 对平滑尺度做对比：$\sigma\in\{0.8,1.0,1.6\}$，观察模糊、梯度、NMS 与边缘图；
+  \item 在基准 $\sigma=0.8$ 上，遍历三组双阈值（高/低比例）：$(0.25,0.10)$、$(0.35,0.15)$、$(0.15,0.07)$；
+  \item 输出包含：模糊图、梯度幅值、方向、NMS 与对应边缘图，文件名带有参数后缀便于直接比对。
+\end{itemize}
+参数影响：
+\begin{itemize}
+  \item $\sigma$ 增大可降低噪声但使边缘略宽、漏检弱边缘；
+  \item 高阈值抬升会减少检测到的边缘，低阈值抬升会切断弱边缘的连接；
+  \item 边缘质量依赖梯度方向量化与 NMS，过粗的量化会造成边缘锯齿。
+\end{itemize}
+
+平滑尺度对比见图~\ref{fig:task2-sigma}，双阈值对比见图~\ref{fig:task2-thresholds}。
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.3\textwidth]{outputs/task2/blurred_sigma0.80.png}
+  \includegraphics[width=0.3\textwidth]{outputs/task2/gradient_sigma0.80.png}
+  \includegraphics[width=0.3\textwidth]{outputs/task2/edges_sigma0.80.png}
+  \\
+  \includegraphics[width=0.3\textwidth]{outputs/task2/blurred_sigma1.00.png}
+  \includegraphics[width=0.3\textwidth]{outputs/task2/gradient_sigma1.00.png}
+  \includegraphics[width=0.3\textwidth]{outputs/task2/edges_sigma1.00.png}
+  \\
+  \includegraphics[width=0.3\textwidth]{outputs/task2/blurred_sigma1.60.png}
+  \includegraphics[width=0.3\textwidth]{outputs/task2/gradient_sigma1.60.png}
+  \includegraphics[width=0.3\textwidth]{outputs/task2/edges_sigma1.60.png}
+  \caption{不同 $\sigma$ 下的模糊、梯度幅值与边缘（均使用基准双阈值 0.25/0.10）}
+  \label{fig:task2-sigma}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.32\textwidth]{outputs/task2/edges_thresh_high0.25_low0.10.png}
+  \includegraphics[width=0.32\textwidth]{outputs/task2/edges_thresh_high0.35_low0.15.png}
+  \includegraphics[width=0.32\textwidth]{outputs/task2/edges_thresh_high0.15_low0.07.png}
+  \caption{基准 $\sigma=0.8$ 下不同双阈值的边缘结果}
+  \label{fig:task2-thresholds}
+\end{figure}
+
+\subsection{任务三：Harris 角点检测}
+\begin{itemize}
+  \item 使用高斯导数求梯度，窗口平滑方差做对比：$\sigma_w\in\{0.8,1.5,2.5\}$，$\alpha=0.05$；
+  \item 以响应最大值的 1\% 作为阈值并做 3$\times$3 NMS；
+  \item 生成原图角点可视化、缩放 0.7 倍以及旋转 $30^\circ$ 后的角点可视化，用于观察尺度与旋转等变性；
+  \item 窗口越大，响应更平滑、角点更稀疏，定位偏移也更明显；小窗口则角点密集但容易受噪声影响。
+\end{itemize}
+
+不同窗口的响应与角点可视化见图~\ref{fig:task3-windows}，等变性实验见图~\ref{fig:task3-variants}。
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.32\textwidth]{outputs/task3/response_window0.80.png}
+  \includegraphics[width=0.32\textwidth]{outputs/task3/response_window1.50.png}
+  \includegraphics[width=0.32\textwidth]{outputs/task3/response_window2.50.png}
+  \\
+  \includegraphics[width=0.32\textwidth]{outputs/task3/corners_window0.80.png}
+  \includegraphics[width=0.32\textwidth]{outputs/task3/corners_window1.50.png}
+  \includegraphics[width=0.32\textwidth]{outputs/task3/corners_window2.50.png}
+  \caption{不同窗口方差下的响应与角点分布对比}
+  \label{fig:task3-windows}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.45\textwidth]{outputs/task3/corners_scaled.png}
+  \includegraphics[width=0.45\textwidth]{outputs/task3/corners_rotated.png}
+  \caption{缩放与旋转后的角点检测结果，用于观察等变性}
+  \label{fig:task3-variants}
+\end{figure}
+
+\section{结论与思考}
+\begin{itemize}
+  \item 高斯方差在梯度计算、Canny 与 Harris 中都体现为噪声抑制与细节保持的权衡；
+  \item Canny 通过 NMS 与滞后阈值实现单一响应与连通性，但阈值选择需要结合图像对比度；
+  \item Harris 角点具有一定的平移、旋转等变性，尺度变化需要匹配的平滑尺度以维持响应；
+  \item 所有结果可通过运行脚本重新生成，便于针对不同参数进行扩展实验。
+\end{itemize}
+
+\end{document}
