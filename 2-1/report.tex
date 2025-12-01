@@ -1,0 +1,157 @@
+\documentclass[a4paper,12pt]{article}
+\usepackage{CJKutf8}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{array}
+\usepackage{geometry}
+\usepackage{caption}
+\geometry{margin=1in}
+
+\begin{document}
+\begin{CJK}{UTF8}{gbsn}
+\title{计算机视觉实验2-1：几何变换与图像金字塔}
+\author{CVPR 实验}
+\date{\today}
+\maketitle
+
+\section{实验目的}
+\begin{itemize}
+    \item 掌握图像的参数化几何变换原理；
+    \item 掌握图像的前向变换与逆向变换；
+    \item 理解图像的下抽样与插值方法；
+    \item 掌握高斯金字塔与拉普拉斯金字塔的构造原理。
+\end{itemize}
+
+\section{实验原理简述}
+\subsection{二维几何变换}
+齐次坐标下的二维几何变换可统一写为 $\mathbf{p}' = T\mathbf{p}$。常见变换矩阵如表\ref{tab:transform} 所示。逆变换 $T^{-1}$ 将目标坐标映射回源坐标，便于插值采样。
+
+\begin{table}[H]
+    \centering
+    \caption{常见二维几何变换矩阵}
+    \label{tab:transform}
+    \begin{tabular}{|m{3cm}|m{7cm}|m{2cm}|}
+        \hline
+        变换 & 矩阵 $T$ & 自由度 \\
+        \hline
+        平移 & $\begin{bmatrix}1&0&t_x\\0&1&t_y\\0&0&1\end{bmatrix}$ & 2 \\
+        \hline
+        旋转 & $\begin{bmatrix}\cos\theta&-\sin\theta&0\\ \sin\theta&\cos\theta&0\\0&0&1\end{bmatrix}$ & 1 \\
+        \hline
+        欧氏 & 在旋转基础上叠加平移 & 3 \\
+        \hline
+        相似 & 旋转+等比缩放+平移 & 4 \\
+        \hline
+        仿射 & $\begin{bmatrix}a&b&c\\d&e&f\\0&0&1\end{bmatrix}$ & 6 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\subsection{前向与逆向映射}
+前向映射将源像素投射到新坐标，容易出现空洞；逆向映射逐像素查询源坐标，再通过插值得到灰度，可避免空洞。
+
+\subsection{插值方式}
+近邻插值选择最近的整数网格点；双线性插值对周围四个网格点按距离进行加权平均，过渡更平滑。
+
+\subsection{高斯与拉普拉斯金字塔}
+高斯金字塔通过高斯滤波后下采样逐层构造；拉普拉斯金字塔为相邻高斯层的差值（将低分辨率层上采样后相减），记录细节残差，便于重建。
+
+\section{实验环境与程序设计}
+本实验使用纯 Python 实现，无外部依赖。图像以三通道列表形式存储，自行实现 PNG 写入器、几何变换、卷积、高斯/拉普拉斯金字塔等函数。代码位于 \texttt{2-1/experiment.py}。\textbf{为减小仓库体积，仓库未附带生成的 PNG 图像，编译报告前请先运行 \texttt{python experiment.py} 以生成 \texttt{output/} 目录中的图片。}
+
+\section{实验步骤与结果}
+\subsection{测试图像}
+生成一幅 $256\times256$ 的合成图像，包含矩形、圆形、三角形和网格线，便于观察几何变化。如图\ref{fig:original}。
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.42\textwidth]{output/original.png}
+    \caption{合成测试图像}
+    \label{fig:original}
+\end{figure}
+
+\subsection{前向与逆向映射对比}
+对平移、旋转、欧氏、相似和仿射变换分别进行前向映射与逆向映射。前向映射仅做整数落点，容易出现黑色空洞；逆向映射结合插值后图像连贯性更好。各变换矩阵的运行结果如图\ref{fig:translation}--\ref{fig:affine} 所示，均展示了前向映射、逆向近邻和逆向双线性三种输出。
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.32\textwidth]{output/forward_translation.png}
+    \includegraphics[width=0.32\textwidth]{output/inverse_nearest_translation.png}
+    \includegraphics[width=0.32\textwidth]{output/inverse_bilinear_translation.png}
+    \caption{平移变换：前向映射（左）、逆向近邻（中）、逆向双线性（右）}
+    \label{fig:translation}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.32\textwidth]{output/forward_rotation.png}
+    \includegraphics[width=0.32\textwidth]{output/inverse_nearest_rotation.png}
+    \includegraphics[width=0.32\textwidth]{output/inverse_bilinear_rotation.png}
+    \caption{旋转变换：前向映射（左）、逆向近邻（中）、逆向双线性（右）}
+    \label{fig:forward_inverse}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.32\textwidth]{output/forward_euclidean.png}
+    \includegraphics[width=0.32\textwidth]{output/inverse_nearest_euclidean.png}
+    \includegraphics[width=0.32\textwidth]{output/inverse_bilinear_euclidean.png}
+    \caption{欧氏变换（旋转+平移）：前向映射与逆向映射对比}
+    \label{fig:euclidean}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.32\textwidth]{output/forward_similarity.png}
+    \includegraphics[width=0.32\textwidth]{output/inverse_nearest_similarity.png}
+    \includegraphics[width=0.32\textwidth]{output/inverse_bilinear_similarity.png}
+    \caption{相似变换：前向映射与逆向映射对比}
+    \label{fig:similarity}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.32\textwidth]{output/forward_affine.png}
+    \includegraphics[width=0.32\textwidth]{output/inverse_nearest_affine.png}
+    \includegraphics[width=0.32\textwidth]{output/inverse_bilinear_affine.png}
+    \caption{仿射变换：前向映射与两种插值的逆向映射}
+    \label{fig:affine}
+\end{figure}
+
+\subsection{插值方式对比}
+近邻插值会产生阶梯状边缘；双线性插值过渡平滑，网格和边缘锯齿明显减少。图\ref{fig:forward_inverse} 右图即可观察到差异。
+
+\subsection{高斯与拉普拉斯金字塔}
+采用 $5\times5$ 高斯核进行平滑，再按 2 倍下采样构建 4 层高斯金字塔。拉普拉斯金字塔通过上采样并相减得到，视觉化时向上平移 128 以显示正负残差信息。部分结果如图\ref{fig:gaussian}、图\ref{fig:laplacian}。
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.3\textwidth]{output/gaussian_level_0.png}
+    \includegraphics[width=0.3\textwidth]{output/gaussian_level_1.png}
+    \includegraphics[width=0.3\textwidth]{output/gaussian_level_2.png}
+    \caption{高斯金字塔第0、1、2层}
+    \label{fig:gaussian}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.3\textwidth]{output/laplacian_level_0.png}
+    \includegraphics[width=0.3\textwidth]{output/laplacian_level_1.png}
+    \includegraphics[width=0.3\textwidth]{output/laplacian_level_2.png}
+    \caption{拉普拉斯金字塔第0、1、2层（显示已偏移）}
+    \label{fig:laplacian}
+\end{figure}
+
+\section{结果分析与讨论}
+\begin{itemize}
+    \item \textbf{前向 vs. 逆向：} 前向映射难以填补空洞，需要额外插值或扩散；逆向映射逐像素查询源坐标，能保证输出完整。
+    \item \textbf{插值差异：} 近邻插值速度快但易出现锯齿，双线性插值能平滑网格与边缘，适合几何校正。
+    \item \textbf{金字塔：} 高斯金字塔有效抑制高频后再下采样，拉普拉斯金字塔记录各层细节，可用于多尺度融合或重建。
+\end{itemize}
+
+\section{结论}
+实验实现了常见几何变换、前向/逆向映射与两种插值方式，并构建了高斯与拉普拉斯金字塔。结果验证了逆向映射配合双线性插值的优势，也展示了金字塔对多尺度表示的作用。
+
+\end{CJK}
+\end{document}
