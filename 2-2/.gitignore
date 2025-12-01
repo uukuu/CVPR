@@ -1,0 +1,8 @@
+outputs/
+*.png
+*.jpg
+*.jpeg
+*.zip
+*.pdf
+__pycache__/
+*.pyc
