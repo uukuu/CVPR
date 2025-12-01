@@ -27,7 +27,7 @@
   \item 语言：Python 3，无额外第三方图像库；
   \item 代码位置：仓库 \texttt{2-2} 目录；
   \item 运行方式：\texttt{python 1.py}、\texttt{python 2.py}、\texttt{python 3.py}；
-  \item 结果保存：脚本会在 \texttt{outputs/} 下生成 PNG，已通过 \texttt{.gitignore} 排除，需本地运行脚本再编译报告。
+  \item 结果保存：\texttt{outputs/} 目录中仅保留占位文件，PNG 需运行脚本重新生成后再编译查看。
 \end{itemize}
 
 \section{相关理论}
@@ -56,7 +56,42 @@ $R$ 同时反映窗口在水平方向与垂直方向的强梯度。角点需满�
   \item 选择 $\sigma\in\{0.5,1.0,2.0\}$，计算 $G_x, G_y$ 卷积后的 $I_x,I_y$，再求幅值与方向；
   \item 幅值图随 $\sigma$ 增大而更平滑，细节与噪声被抑制；方向图用色相编码，平滑后方向更连续。
 \end{itemize}
-生成文件：\texttt{outputs/task1/gx\_sigma*.png}、\texttt{mag\_sigma*.png}、\texttt{orient\_sigma*.png}。
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.35\textwidth]{outputs/task1/input.png}
+  \caption{任务一输入图像}
+  \label{fig:task1-input}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.23\textwidth]{outputs/task1/gx_sigma0.50.png}
+  \includegraphics[width=0.23\textwidth]{outputs/task1/gy_sigma0.50.png}
+  \includegraphics[width=0.23\textwidth]{outputs/task1/mag_sigma0.50.png}
+  \includegraphics[width=0.23\textwidth]{outputs/task1/orient_sigma0.50.png}
+  \caption{$\sigma=0.5$ 的梯度结果（$G_x,G_y$、幅值、方向）}
+  \label{fig:task1-sigma05}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.23\textwidth]{outputs/task1/gx_sigma1.00.png}
+  \includegraphics[width=0.23\textwidth]{outputs/task1/gy_sigma1.00.png}
+  \includegraphics[width=0.23\textwidth]{outputs/task1/mag_sigma1.00.png}
+  \includegraphics[width=0.23\textwidth]{outputs/task1/orient_sigma1.00.png}
+  \caption{$\sigma=1.0$ 的梯度结果（$G_x,G_y$、幅值、方向）}
+  \label{fig:task1-sigma1}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.23\textwidth]{outputs/task1/gx_sigma2.00.png}
+  \includegraphics[width=0.23\textwidth]{outputs/task1/gy_sigma2.00.png}
+  \includegraphics[width=0.23\textwidth]{outputs/task1/mag_sigma2.00.png}
+  \includegraphics[width=0.23\textwidth]{outputs/task1/orient_sigma2.00.png}
+  \caption{$\sigma=2.0$ 的梯度结果（$G_x,G_y$、幅值、方向）}
+  \label{fig:task1-sigma2}
+\end{figure}
 
 \subsection{任务二：Canny 边缘检测}
 \begin{itemize}

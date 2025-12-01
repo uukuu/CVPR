@@ -274,14 +274,6 @@ def visualize_laplacian(pixels: List[List[Pixel]]) -> List[List[Pixel]]:
                 clamp((pixels[y][x][0] / (2 * max_abs[0]) + 0.5) * 255),
                 clamp((pixels[y][x][1] / (2 * max_abs[1]) + 0.5) * 255),
                 clamp((pixels[y][x][2] / (2 * max_abs[2]) + 0.5) * 255),
-    # shift values to displayable range
-    output = create_image(len(pixels[0]), len(pixels), (0, 0, 0))
-    for y in range(len(pixels)):
-        for x in range(len(pixels[0])):
-            output[y][x] = (
-                clamp(pixels[y][x][0] + 128),
-                clamp(pixels[y][x][1] + 128),
-                clamp(pixels[y][x][2] + 128),
             )
     return output
 

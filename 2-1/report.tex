@@ -82,7 +82,6 @@
     \caption{平移变换：前向映射（左）、逆向近邻（中）、逆向双线性（右）}
     \label{fig:translation}
 \end{figure}
-对平移、旋转、欧氏、相似和仿射变换分别进行前向映射与逆向映射。前向映射仅做整数落点，容易出现黑色空洞；逆向映射结合插值后图像连贯性更好。以旋转与仿射为例如图\ref{fig:forward_inverse}、图\ref{fig:affine}。
 
 \begin{figure}[H]
     \centering
@@ -125,7 +124,6 @@
 
 \subsection{高斯与拉普拉斯金字塔}
 采用 $5\times5$ 高斯核进行平滑，再按 2 倍下采样构建 4 层高斯金字塔。拉普拉斯金字塔通过上采样并相减得到，早期版本直接加 128 偏移显示，导致残差为正时全图偏白。本次对残差按通道对称归一化到 $[0,255]$（以 $\lVert\Delta\rVert_{\infty}$ 为尺度），同时再加 $0.5$ 偏移展示正负，避免了白蒙蒙的效果。部分结果如图\ref{fig:gaussian}、图\ref{fig:laplacian}。
-采用 $5\times5$ 高斯核进行平滑，再按 2 倍下采样构建 4 层高斯金字塔。拉普拉斯金字塔通过上采样并相减得到，视觉化时向上平移 128 以显示正负残差信息。部分结果如图\ref{fig:gaussian}、图\ref{fig:laplacian}。
 
 \begin{figure}[H]
     \centering
