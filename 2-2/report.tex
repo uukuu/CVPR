@@ -28,6 +28,7 @@
   \item 代码位置：仓库 \texttt{2-2} 目录；
   \item 运行方式：\texttt{python 1.py}、\texttt{python 2.py}、\texttt{python 3.py}；
   \item 结果保存：\texttt{outputs/} 目录中仅保留占位文件，PNG 需运行脚本重新生成后再编译查看。
+  \item 编译提示：若仓库中未包含生成的 PNG，请先按上述命令运行脚本以重新得到 \texttt{outputs/} 下的图片，再执行 \texttt{pdflatex report.tex}。
 \end{itemize}
 
 \section{相关理论}
@@ -97,10 +98,9 @@ $R$ 同时反映窗口在水平方向与垂直方向的强梯度。角点需满�
 
 \subsection{任务二：Canny 边缘检测}
 \begin{itemize}
-  \item 采用高斯平滑（默认 $\sigma=1.0$），Sobel 求梯度；
-  \item 沿量化梯度方向做 NMS；
-  \item 以高阈值比例 \texttt{high\_ratio=0.25}、低阈值比例 \texttt{low\_ratio=0.1} 进行滞后阈值；
-  \item 输出包含：模糊图、梯度幅值、方向、NMS 结果以及最终边缘二值图。
+  \item 对平滑尺度做对比：$\sigma\in\{0.8,1.0,1.6\}$，观察模糊、梯度、NMS 与边缘图；
+  \item 在基准 $\sigma=0.8$ 上，遍历三组双阈值（高/低比例）：$(0.25,0.10)$、$(0.35,0.15)$、$(0.15,0.07)$；
+  \item 输出包含：模糊图、梯度幅值、方向、NMS 与对应边缘图，文件名带有参数后缀便于直接比对。
 \end{itemize}
 参数影响：
 \begin{itemize}
@@ -109,43 +109,55 @@ $R$ 同时反映窗口在水平方向与垂直方向的强梯度。角点需满�
   \item 边缘质量依赖梯度方向量化与 NMS，过粗的量化会造成边缘锯齿。
 \end{itemize}
 
-实验各阶段结果如图~\ref{fig:task2-input}~--~\ref{fig:task2-edges} 所示。
+平滑尺度对比见图~\ref{fig:task2-sigma}，双阈值对比见图~\ref{fig:task2-thresholds}。
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.28\textwidth]{outputs/task2/input.png}
-  \includegraphics[width=0.28\textwidth]{outputs/task2/blurred.png}
-  \includegraphics[width=0.28\textwidth]{outputs/task2/gradient.png}
-  \caption{任务二输入、模糊、梯度幅值}
-  \label{fig:task2-input}
+  \includegraphics[width=0.3\textwidth]{outputs/task2/blurred_sigma0.80.png}
+  \includegraphics[width=0.3\textwidth]{outputs/task2/gradient_sigma0.80.png}
+  \includegraphics[width=0.3\textwidth]{outputs/task2/edges_sigma0.80.png}
+  \\
+  \includegraphics[width=0.3\textwidth]{outputs/task2/blurred_sigma1.00.png}
+  \includegraphics[width=0.3\textwidth]{outputs/task2/gradient_sigma1.00.png}
+  \includegraphics[width=0.3\textwidth]{outputs/task2/edges_sigma1.00.png}
+  \\
+  \includegraphics[width=0.3\textwidth]{outputs/task2/blurred_sigma1.60.png}
+  \includegraphics[width=0.3\textwidth]{outputs/task2/gradient_sigma1.60.png}
+  \includegraphics[width=0.3\textwidth]{outputs/task2/edges_sigma1.60.png}
+  \caption{不同 $\sigma$ 下的模糊、梯度幅值与边缘（均使用基准双阈值 0.25/0.10）}
+  \label{fig:task2-sigma}
 \end{figure}
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.32\textwidth]{outputs/task2/orientation.png}
-  \includegraphics[width=0.32\textwidth]{outputs/task2/nms.png}
-  \includegraphics[width=0.32\textwidth]{outputs/task2/edges.png}
-  \caption{任务二梯度方向、NMS 结果与最终边缘}
-  \label{fig:task2-edges}
+  \includegraphics[width=0.32\textwidth]{outputs/task2/edges_thresh_high0.25_low0.10.png}
+  \includegraphics[width=0.32\textwidth]{outputs/task2/edges_thresh_high0.35_low0.15.png}
+  \includegraphics[width=0.32\textwidth]{outputs/task2/edges_thresh_high0.15_low0.07.png}
+  \caption{基准 $\sigma=0.8$ 下不同双阈值的边缘结果}
+  \label{fig:task2-thresholds}
 \end{figure}
 
 \subsection{任务三：Harris 角点检测}
 \begin{itemize}
-  \item 使用高斯导数求梯度，窗口平滑方差 \texttt{sigma\_window=1.5}，$\alpha=0.05$；
+  \item 使用高斯导数求梯度，窗口平滑方差做对比：$\sigma_w\in\{0.8,1.5,2.5\}$，$\alpha=0.05$；
   \item 以响应最大值的 1\% 作为阈值并做 3$\times$3 NMS；
   \item 生成原图角点可视化、缩放 0.7 倍以及旋转 $30^\circ$ 后的角点可视化，用于观察尺度与旋转等变性；
-  \item 窗口方差越大，角点更稀疏且定位更平滑；阈值越高，角点数量越少但鲁棒性更强。
+  \item 窗口越大，响应更平滑、角点更稀疏，定位偏移也更明显；小窗口则角点密集但容易受噪声影响。
 \end{itemize}
 
-实验输出如图~\ref{fig:task3-response} 和图~\ref{fig:task3-variants} 所示。
+不同窗口的响应与角点可视化见图~\ref{fig:task3-windows}，等变性实验见图~\ref{fig:task3-variants}。
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.38\textwidth]{outputs/task3/input.png}
-  \includegraphics[width=0.38\textwidth]{outputs/task3/response.png}
-  \includegraphics[width=0.38\textwidth]{outputs/task3/corners.png}
-  \caption{任务三输入、响应图与角点可视化}
-  \label{fig:task3-response}
+  \includegraphics[width=0.32\textwidth]{outputs/task3/response_window0.80.png}
+  \includegraphics[width=0.32\textwidth]{outputs/task3/response_window1.50.png}
+  \includegraphics[width=0.32\textwidth]{outputs/task3/response_window2.50.png}
+  \\
+  \includegraphics[width=0.32\textwidth]{outputs/task3/corners_window0.80.png}
+  \includegraphics[width=0.32\textwidth]{outputs/task3/corners_window1.50.png}
+  \includegraphics[width=0.32\textwidth]{outputs/task3/corners_window2.50.png}
+  \caption{不同窗口方差下的响应与角点分布对比}
+  \label{fig:task3-windows}
 \end{figure}
 
 \begin{figure}[H]

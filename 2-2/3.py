@@ -86,7 +86,7 @@ def max_value(img: List[List[float]]) -> float:
 
 def run(
     sigma_grad: float = 1.0,
-    sigma_window: float = 1.5,
+    window_sigmas: Tuple[float, ...] = (0.8, 1.5, 2.5),
     alpha: float = 0.05,
     threshold_ratio: float = 0.01,
     scale_factor: float = 0.7,
@@ -100,28 +100,39 @@ def run(
     gray = rgb_to_gray(rgb)
     write_png(rgb, out_dir / "input.png")
 
-    resp = harris_response(gray, sigma_grad, sigma_window, alpha)
-    thresh = max_value(resp) * threshold_ratio
-    corners = nms_corners(resp, thresh, radius=2)
-    save_gray(resp, out_dir / "response.png", normalize=True)
-    write_png(draw_corners(rgb, corners), out_dir / "corners.png")
+    last_resp = None
+    last_corners = None
+    last_sigma_window = window_sigmas[-1]
+    for sigma_window in window_sigmas:
+        resp = harris_response(gray, sigma_grad, sigma_window, alpha)
+        thresh = max_value(resp) * threshold_ratio
+        corners = nms_corners(resp, thresh, radius=2)
+        save_gray(resp, out_dir / f"response_window{sigma_window:.2f}.png", normalize=True)
+        write_png(draw_corners(rgb, corners), out_dir / f"corners_window{sigma_window:.2f}.png")
+        print(
+            f"Harris window sweep: sigma_grad={sigma_grad}, sigma_window={sigma_window}, corners={len(corners)}, threshold={thresh:.2f}"
+        )
+        last_resp = resp
+        last_corners = corners
+        last_sigma_window = sigma_window
 
     # Scale invariance check
     scaled = resize_nearest(rgb, scale_factor)
     scaled_gray = rgb_to_gray(scaled)
-    resp_scaled = harris_response(scaled_gray, sigma_grad, sigma_window, alpha)
+    resp_scaled = harris_response(scaled_gray, sigma_grad, last_sigma_window, alpha)
     corners_scaled = nms_corners(resp_scaled, max_value(resp_scaled) * threshold_ratio, radius=2)
     write_png(draw_corners(scaled, corners_scaled), out_dir / "corners_scaled.png")
 
     # Rotation equivariance check
     rotated = rotate_image(rgb, rotation_deg)
     rotated_gray = rgb_to_gray(rotated)
-    resp_rot = harris_response(rotated_gray, sigma_grad, sigma_window, alpha)
+    resp_rot = harris_response(rotated_gray, sigma_grad, last_sigma_window, alpha)
     corners_rot = nms_corners(resp_rot, max_value(resp_rot) * threshold_ratio, radius=2)
     write_png(draw_corners(rotated, corners_rot), out_dir / "corners_rotated.png")
 
     print(
-        f"Harris: corners={len(corners)}, scaled={len(corners_scaled)}, rotated={len(corners_rot)}, threshold={thresh:.2f}"
+        f"Harris invariance check: base={len(last_corners)}, scaled={len(corners_scaled)}, "
+        f"rotated={len(corners_rot)}, sigma_window={last_sigma_window}"
     )
 
 

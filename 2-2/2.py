@@ -3,7 +3,7 @@ Experiment 2-2 Task 2: Canny edge detector implementation with step outputs (pur
 """
 import math
 from pathlib import Path
-from typing import List
+from typing import List, Sequence, Tuple
 
 from utils import (
     convolve,
@@ -95,7 +95,10 @@ def positive_count(img: List[List[float]]) -> int:
     return sum(1 for row in img for v in row if v > 0)
 
 
-def run(sigma: float = 1.0, low_ratio: float = 0.1, high_ratio: float = 0.25) -> None:
+def run(
+    sigma_list: Sequence[float] = (0.8, 1.0, 1.6),
+    threshold_pairs: Sequence[Tuple[float, float]] = ((0.25, 0.1), (0.35, 0.15), (0.15, 0.07)),
+) -> None:
     base_dir = Path(__file__).parent
     out_dir = base_dir / "outputs" / "task2"
     ensure_dir(str(out_dir))
@@ -104,27 +107,55 @@ def run(sigma: float = 1.0, low_ratio: float = 0.1, high_ratio: float = 0.25) ->
     gray = rgb_to_gray(rgb)
     write_png(rgb, str(out_dir / "input.png"))
 
-    g_kernel = gaussian_kernel(sigma)
-    blurred = convolve(gray, g_kernel)
-    save_gray(blurred, str(out_dir / "blurred.png"))
-
     kx, ky = sobel_kernels()
-    gx = convolve(blurred, kx)
-    gy = convolve(blurred, ky)
-    mag = hypot_map(gx, gy)
-    theta = atan2_map(gy, gx)
-    save_gray(mag, str(out_dir / "gradient.png"), normalize=True)
-    write_png(to_orientation_rgb(theta), str(out_dir / "orientation.png"))
 
-    nms = non_maximum_suppression(mag, theta)
-    save_gray(nms, str(out_dir / "nms.png"), normalize=True)
+    baseline_mag = None
+    baseline_theta = None
 
-    high = max_value(mag) * high_ratio
-    low = high * low_ratio
-    edges = hysteresis(nms, low, high)
-    save_gray(edges, str(out_dir / "edges.png"), normalize=False)
+    for sigma in sigma_list:
+        g_kernel = gaussian_kernel(sigma)
+        blurred = convolve(gray, g_kernel)
+        save_gray(blurred, str(out_dir / f"blurred_sigma{sigma:.2f}.png"))
 
-    print(f"Canny: sigma={sigma}, high={high:.2f}, low={low:.2f}, edges={positive_count(edges)} pixels")
+        gx = convolve(blurred, kx)
+        gy = convolve(blurred, ky)
+        mag = hypot_map(gx, gy)
+        theta = atan2_map(gy, gx)
+        save_gray(mag, str(out_dir / f"gradient_sigma{sigma:.2f}.png"), normalize=True)
+        write_png(to_orientation_rgb(theta), str(out_dir / f"orientation_sigma{sigma:.2f}.png"))
+
+        nms = non_maximum_suppression(mag, theta)
+        save_gray(nms, str(out_dir / f"nms_sigma{sigma:.2f}.png"), normalize=True)
+
+        # Use the first sigma in the list as the baseline for threshold sweeps
+        if baseline_mag is None:
+            baseline_mag = mag
+            baseline_theta = theta
+
+        high = max_value(mag) * threshold_pairs[0][0]
+        low = high * threshold_pairs[0][1]
+        edges = hysteresis(nms, low, high)
+        save_gray(edges, str(out_dir / f"edges_sigma{sigma:.2f}.png"), normalize=False)
+        print(
+            f"Canny sigma sweep: sigma={sigma}, high_ratio={threshold_pairs[0][0]:.2f}, "
+            f"low_ratio={threshold_pairs[0][1]:.2f}, edges={positive_count(edges)}"
+        )
+
+    if baseline_mag is not None and baseline_theta is not None:
+        nms_base = non_maximum_suppression(baseline_mag, baseline_theta)
+        for high_ratio, low_ratio in threshold_pairs:
+            high = max_value(baseline_mag) * high_ratio
+            low = high * low_ratio
+            edges = hysteresis(nms_base, low, high)
+            save_gray(
+                edges,
+                str(out_dir / f"edges_thresh_high{high_ratio:.2f}_low{low_ratio:.2f}.png"),
+                normalize=False,
+            )
+            print(
+                f"Canny threshold sweep: sigma={sigma_list[0]}, high_ratio={high_ratio:.2f}, "
+                f"low_ratio={low_ratio:.2f}, edges={positive_count(edges)}"
+            )
 
 
 if __name__ == "__main__":
