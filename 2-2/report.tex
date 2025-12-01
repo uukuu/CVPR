@@ -56,6 +56,8 @@ $R$ 同时反映窗口在水平方向与垂直方向的强梯度。角点需满�
   \item 选择 $\sigma\in\{0.5,1.0,2.0\}$，计算 $G_x, G_y$ 卷积后的 $I_x,I_y$，再求幅值与方向；
   \item 幅值图随 $\sigma$ 增大而更平滑，细节与噪声被抑制；方向图用色相编码，平滑后方向更连续。
 \end{itemize}
+生成结果如图~\ref{fig:task1-input}~--~\ref{fig:task1-sigma2} 所示。
+
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.35\textwidth]{outputs/task1/input.png}
@@ -107,6 +109,26 @@ $R$ 同时反映窗口在水平方向与垂直方向的强梯度。角点需满�
   \item 边缘质量依赖梯度方向量化与 NMS，过粗的量化会造成边缘锯齿。
 \end{itemize}
 
+实验各阶段结果如图~\ref{fig:task2-input}~--~\ref{fig:task2-edges} 所示。
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.28\textwidth]{outputs/task2/input.png}
+  \includegraphics[width=0.28\textwidth]{outputs/task2/blurred.png}
+  \includegraphics[width=0.28\textwidth]{outputs/task2/gradient.png}
+  \caption{任务二输入、模糊、梯度幅值}
+  \label{fig:task2-input}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.32\textwidth]{outputs/task2/orientation.png}
+  \includegraphics[width=0.32\textwidth]{outputs/task2/nms.png}
+  \includegraphics[width=0.32\textwidth]{outputs/task2/edges.png}
+  \caption{任务二梯度方向、NMS 结果与最终边缘}
+  \label{fig:task2-edges}
+\end{figure}
+
 \subsection{任务三：Harris 角点检测}
 \begin{itemize}
   \item 使用高斯导数求梯度，窗口平滑方差 \texttt{sigma\_window=1.5}，$\alpha=0.05$；
@@ -114,6 +136,25 @@ $R$ 同时反映窗口在水平方向与垂直方向的强梯度。角点需满�
   \item 生成原图角点可视化、缩放 0.7 倍以及旋转 $30^\circ$ 后的角点可视化，用于观察尺度与旋转等变性；
   \item 窗口方差越大，角点更稀疏且定位更平滑；阈值越高，角点数量越少但鲁棒性更强。
 \end{itemize}
+
+实验输出如图~\ref{fig:task3-response} 和图~\ref{fig:task3-variants} 所示。
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.38\textwidth]{outputs/task3/input.png}
+  \includegraphics[width=0.38\textwidth]{outputs/task3/response.png}
+  \includegraphics[width=0.38\textwidth]{outputs/task3/corners.png}
+  \caption{任务三输入、响应图与角点可视化}
+  \label{fig:task3-response}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.45\textwidth]{outputs/task3/corners_scaled.png}
+  \includegraphics[width=0.45\textwidth]{outputs/task3/corners_rotated.png}
+  \caption{缩放与旋转后的角点检测结果，用于观察等变性}
+  \label{fig:task3-variants}
+\end{figure}
 
 \section{结论与思考}
 \begin{itemize}
