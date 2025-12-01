@@ -252,6 +252,28 @@ def subtract_images(a: List[List[Pixel]], b: List[List[Pixel]]) -> List[List[Pix
 
 
 def visualize_laplacian(pixels: List[List[Pixel]]) -> List[List[Pixel]]:
+    """Normalize Laplacian values to a visible 0-255 range."""
+
+    height = len(pixels)
+    width = len(pixels[0])
+
+    # Find the symmetric range around zero to avoid bright bias
+    max_abs = [0.0, 0.0, 0.0]
+    for y in range(height):
+        for x in range(width):
+            for c in range(3):
+                max_abs[c] = max(max_abs[c], abs(pixels[y][x][c]))
+
+    # Prevent division by zero
+    max_abs = [m if m > 1e-6 else 1.0 for m in max_abs]
+
+    output = create_image(width, height, (0, 0, 0))
+    for y in range(height):
+        for x in range(width):
+            output[y][x] = (
+                clamp((pixels[y][x][0] / (2 * max_abs[0]) + 0.5) * 255),
+                clamp((pixels[y][x][1] / (2 * max_abs[1]) + 0.5) * 255),
+                clamp((pixels[y][x][2] / (2 * max_abs[2]) + 0.5) * 255),
     # shift values to displayable range
     output = create_image(len(pixels[0]), len(pixels), (0, 0, 0))
     for y in range(len(pixels)):
